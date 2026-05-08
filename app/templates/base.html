@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or "HOIISP" }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" />
+    <style>
+      :root { --muted: #666; }
+      nav { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+      .stats { margin: 1rem 0; padding: .75rem; border: 1px solid #ddd; border-radius: 6px; }
+      .muted { color: var(--muted); }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .tag { display: inline-block; border: 1px solid #999; border-radius: 20px; padding: 0 .5rem; margin: 0 .2rem .2rem 0; font-size: .85rem; }
+      .progress { height: 12px; background: #eee; border-radius: 9px; overflow: hidden; }
+      .progress > span { display: block; height: 100%; background: #2d7; }
+      pre { white-space: pre-wrap; }
+      .error { color: #b00; }
+      .ok { color: #070; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1><a href="/">Habib Open Innovation & Independent Study Platform</a></h1>
+      <nav>
+        <a href="/">Leaderboard</a>
+        <a href="/projects">Projects</a>
+        <a href="/submit">Submit</a>
+        <a href="/faculty">Faculty</a>
+        <a href="/admin">Admin</a>
+        <a href="/terms">Terms</a>
+        <a href="/auth">Login/Register</a>
+      </nav>
+      <hr />
+    </header>
+    {% block content %}{% endblock %}
+    <script src="/static/app.js"></script>
+  </body>
+</html>

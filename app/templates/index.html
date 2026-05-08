@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="muted">Upload proposals, discover projects, and track progress live.</p>
+<div id="stats" class="stats">
+  <strong>Active Projects:</strong> {{ stats.active_projects }} |
+  <strong>Endorsements:</strong> {{ stats.endorsements }} |
+  <strong>Lab Hours:</strong> {{ stats.lab_hours }}
+</div>
+
+<h2>Live Leaderboard</h2>
+<p>Sort:
+  <a href="/?sort=stars">Stars</a> |
+  <a href="/?sort=date">Date</a> |
+  <a href="/?sort=title">Title</a> |
+  <a href="/?sort=endorsements">Endorsements</a>
+</p>
+<table>
+  <thead>
+    <tr><th>Project</th><th>Domain</th><th>Status</th><th>Stars</th><th>Endorsements</th><th>Last Update</th></tr>
+  </thead>
+  <tbody id="leaderboard-body" data-sort="{{ sort }}">
+    {% include "_leaderboard_tbody.html" %}
+  </tbody>
+</table>
+<script>
+  window.HOIISP.startLeaderboardSSE();
+</script>
+{% endblock %}

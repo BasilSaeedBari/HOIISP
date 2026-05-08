@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin Panel</h2>
+<p>Logged in as {{ user.email }} ({{ user.role }}).</p>
+<h3>Pending Proposals</h3>
+{% for p in pending %}
+<article>
+  <h4>{{ p.title }}</h4>
+  <p><strong>Submitted:</strong> {{ p.created_at }} | <strong>Domain:</strong> {{ p.domain }}</p>
+  <p>{{ (p.abstract or "")[:240] }}</p>
+  <form method="post" action="/api/admin/proposals/{{ p.id }}/decision">
+    <label>Admin note <input name="note" /></label>
+    <button name="decision" value="approve">Approve</button>
+    <button name="decision" value="reject">Reject</button>
+  </form>
+</article>
+{% else %}
+<p>No pending proposals.</p>
+{% endfor %}
+{% endblock %}

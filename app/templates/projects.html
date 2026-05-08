@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Project Directory</h2>
+<form method="GET">
+  <label>Domain <input name="domain" value="{{ domain }}" /></label>
+  <label>Status
+    <select name="status">
+      <option value="">Any</option>
+      <option value="pending_review" {% if status=="pending_review" %}selected{% endif %}>Pending</option>
+      <option value="active" {% if status=="active" %}selected{% endif %}>Active</option>
+      <option value="rejected" {% if status=="rejected" %}selected{% endif %}>Rejected</option>
+      <option value="complete" {% if status=="complete" %}selected{% endif %}>Complete</option>
+    </select>
+  </label>
+  <label>Endorsed only <input type="checkbox" name="endorsed" value="1" {% if endorsed %}checked{% endif %} /></label>
+  <label>Sort
+    <select name="sort">
+      <option value="stars" {% if sort=="stars" %}selected{% endif %}>Stars</option>
+      <option value="date" {% if sort=="date" %}selected{% endif %}>Date</option>
+      <option value="title" {% if sort=="title" %}selected{% endif %}>Title</option>
+      <option value="endorsements" {% if sort=="endorsements" %}selected{% endif %}>Endorsements</option>
+    </select>
+  </label>
+  <button>Apply</button>
+</form>
+<hr />
+{% for p in projects %}
+<article>
+  <h3><a href="/projects/{{ p.slug }}">{{ p.title }}</a></h3>
+  <p><strong>Domain:</strong> {{ p.domain or "Unspecified" }} | <strong>Status:</strong> {{ p.status }} | <strong>Stars:</strong> {{ p.stars }}</p>
+  <p>{{ (p.abstract or "")[:250] }}{% if p.abstract and p.abstract|length > 250 %}...{% endif %}</p>
+</article>
+{% else %}
+<p>No projects found for this filter.</p>
+{% endfor %}
+{% endblock %}

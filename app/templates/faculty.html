@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Faculty Directory</h2>
+{% for f in faculty %}
+<article>
+  <h3><a href="mailto:{{ f.email }}">{{ f.full_name }}</a></h3>
+  <p><strong>Email:</strong> {{ f.email }}</p>
+  <p>
+    {% for t in f.expertise_tags.split(',') if t.strip() %}
+      <span class="tag">{{ t.strip() }}</span>
+    {% endfor %}
+  </p>
+  <p><strong>Linked Projects:</strong> {{ f.linked_projects }} | <strong>Total Endorsements:</strong> {{ f.endorsements_count }}</p>
+</article>
+{% else %}
+<p>No faculty users yet. Register with role `faculty` to populate this list.</p>
+{% endfor %}
+{% endblock %}

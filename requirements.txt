@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+aiosqlite
+passlib[bcrypt]
+mistune
+python-frontmatter
+httpx
+python-slugify

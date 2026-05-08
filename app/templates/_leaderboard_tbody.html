@@ -1,0 +1,12 @@
+{% for p in projects %}
+<tr>
+  <td><a href="/projects/{{ p.slug }}">{{ p.title }}</a></td>
+  <td>{{ p.domain or "Unspecified" }}</td>
+  <td>{{ p.status }}</td>
+  <td>{{ p.stars }}</td>
+  <td>{{ p.endorsements }}</td>
+  <td>{{ p.last_update }}</td>
+</tr>
+{% else %}
+<tr><td colspan="6">No projects yet.</td></tr>
+{% endfor %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ project.title }}</h2>
+<p><strong>Status:</strong> {{ project.status }} | <strong>Domain:</strong> {{ project.domain or "Unspecified" }}</p>
+<p><strong>Abstract:</strong> {{ project.abstract }}</p>
+<p><strong>Problem Statement:</strong> {{ project.problem_statement }}</p>
+<p><strong>Methodology:</strong> {{ project.methodology }}</p>
+<p><strong>Objectives:</strong> {{ project.objectives }}</p>
+
+<h3>Team</h3>
+<ul>
+  {% for t in team %}
+  <li>{{ t.name }} ({{ t.student_id }}) - {{ t.role }}</li>
+  {% else %}
+  <li>No team members listed.</li>
+  {% endfor %}
+</ul>
+
+<h3>Milestone Tracker</h3>
+{% set complete = milestones | selectattr('status', 'equalto', 'Complete') | list | length %}
+{% set total = milestones | length %}
+{% set pct = (complete * 100 // total) if total else 0 %}
+<div class="progress"><span style="width: {{ pct }}%"></span></div>
+<p>{{ complete }}/{{ total }} milestones complete</p>
+<table>
+  <thead><tr><th>#</th><th>Name</th><th>Deliverables</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for m in milestones %}
+  <tr><td>{{ m.number }}</td><td>{{ m.name }}</td><td>{{ m.deliverables }}</td><td>{{ m.start_date }}</td><td>{{ m.end_date }}</td><td>{{ m.status }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h3>Resource Log</h3>
+<table>
+  <thead><tr><th>Resource</th><th>Location</th><th>Hours</th><th>Purpose</th></tr></thead>
+  <tbody>
+    {% for r in resources %}
+    <tr><td>{{ r.resource_name }}</td><td>{{ r.lab_location }}</td><td>{{ r.estimated_hours }}</td><td>{{ r.purpose }}</td></tr>
+    {% else %}
+    <tr><td colspan="4">No resources logged.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="grid2">
+  <section>
+    <h3>Endorsements</h3>
+    <form data-post="/api/projects/{{ project.slug }}/endorse" data-success="Endorsement saved." data-reload="1">
+      <label>Type
+        <select name="type">
+          <option value="star">Star</option>
+          <option value="vouch">Vouch</option>
+          <option value="endorse">Endorse</option>
+        </select>
+      </label>
+      <label>Comment <input name="comment" /></label>
+      <button>Submit Endorsement</button>
+    </form>
+    <div class="muted">
+      {% for e in endorsements %}
+      <p><strong>{{ e.type|upper }}</strong> by {{ e.user_email }}{% if e.comment %}: {{ e.comment }}{% endif %}</p>
+      {% else %}
+      <p>No endorsements yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section>
+    <h3>Update Feed</h3>
+    <form data-post="/api/projects/{{ project.slug }}/updates" enctype="multipart/form-data" data-success="Update posted." data-reload="1">
+      <label>Update text <textarea name="body" required></textarea></label>
+      <label>Image (optional) <input type="file" name="image" accept=".jpg,.jpeg,.png,.gif,.webp" /></label>
+      <button>Post Update</button>
+    </form>
+    {% for u in updates %}
+    <article>
+      <p><strong>{{ u.posted_by_email or "user" }}</strong> @ {{ u.created_at }}</p>
+      <p>{{ u.body }}</p>
+      {% if u.image_path %}<p><img src="/uploads/{{ u.image_path }}" alt="update image" /></p>{% endif %}
+    </article>
+    {% else %}
+    <p>No updates yet.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

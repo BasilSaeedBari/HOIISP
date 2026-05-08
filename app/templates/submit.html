@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Submit Proposal</h2>
+<p>Upload your `proposal.md` file. Required sections are validated immediately.</p>
+<form data-post="/api/proposals/submit" enctype="multipart/form-data">
+  <label>Markdown proposal file <input type="file" name="file" accept=".md" required /></label>
+  <button>Upload Proposal</button>
+</form>
+<div id="form-result" class="muted"></div>
+{% endblock %}

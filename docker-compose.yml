@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  hoiisp:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: "${SECRET_KEY:-change-me}"
+      TEAMS_WEBHOOK_URL: "${TEAMS_WEBHOOK_URL:-}"
+      DATABASE_PATH: "/data/app.db"
+      UPLOAD_DIR: "/data/uploads"
+    volumes:
+      - hoiisp_data:/data
+
+volumes:
+  hoiisp_data:
