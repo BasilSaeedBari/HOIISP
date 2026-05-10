@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Project{% endblock %}
+
+{% block content %}
+<h2>Submit Your GitHub Repository</h2>
+<p>Paste your GitHub repository URL below. An admin will review it within 48 hours.</p>
+
+<form u-post="/api/submit" id="submitForm">
+    <label>GitHub Repository URL</label><br>
+    <input type="url" name="github_url" placeholder="https://github.com/username/repo" required style="width: 100%;"><br><br>
+
+    <label>Lead Student Habib Email</label><br>
+    <input type="email" name="lead_email" placeholder="name@st.habib.edu.pk" required style="width: 100%;"><br><br>
+
+    <label>
+        <input type="checkbox" name="is_public" required>
+        This repository is set to Public on GitHub
+    </label><br>
+    <label>
+        <input type="checkbox" name="has_habib_email" required>
+        At least one commit in this repo was made using a @st.habib.edu.pk Git email
+    </label><br>
+    <label>
+        <input type="checkbox" name="agreed_terms" required>
+        I have read and agree to the <a href="/terms" target="_blank">HOIISP Terms and Conditions</a>
+    </label><br><br>
+
+    <button type="submit">Submit Repository</button>
+</form>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section>
+    <h2>HOIISP is Habib University's live directory of student-led technical projects.</h2>
+    <p>
+        <a href="/submit"><button>Submit Your GitHub Repo</button></a>
+        &nbsp;&nbsp;<a href="#how-it-works">How It Works</a>
+    </p>
+</section>
+
+<section id="how-it-works" style="background:#f9f9f9; padding:15px; margin: 20px 0;">
+    <h3>How It Works</h3>
+    <ol>
+        <li>Put a <code>project.md</code> in your GitHub repo</li>
+        <li>Submit the URL here</li>
+        <li>Your project goes live on approval.</li>
+    </ol>
+</section>
+
+<section>
+    <h3>Platform Stats</h3>
+    <div style="display:flex; gap: 20px; font-size: 1.2em; font-weight: bold;">
+        <div>Active Projects: {{ stats.active }}</div>
+        <div>Faculty Endorsements: {{ stats.endorsements }}</div>
+        <div>Total Lab Hours Requested: {{ stats.hours }}</div>
+    </div>
+</section>
+
+<section>
+    <h3>Live Leaderboard</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Project Name</th>
+                <th>Domain</th>
+                <th>Team Size</th>
+                <th>Status</th>
+                <th>Milestones</th>
+                <th>Stars</th>
+                <th>Last Push</th>
+            </tr>
+        </thead>
+        <tbody u-sse="/api/stream/leaderboard">
+            <tr><td colspan="8">Loading leaderboard...</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h3>Recent Activity</h3>
+    <ul>
+        {% for event in recent_events %}
+        <li>
+            {% if event.sync_result == 'ok' %}✅{% elif event.sync_result == 'ignored' %}⚪{% else %}⚠️{% endif %}
+            <strong>{{ event.repo_full_name }}</strong> pushed an update at {{ event.received_at }} by <em>{{ event.pusher }}</em>
+        </li>
+        {% else %}
+        <li>No recent activity.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

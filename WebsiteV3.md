@@ -287,7 +287,7 @@ All sorting and filtering is server-side via `?sort=stars&domain=cs&status=activ
 
 | Layer | Technology | Rationale |
 |---|---|---|
-| Backend | Python 3.11 + FastAPI | Lightweight, async-native, built-in SSE support |
+| Backend | Python 3.14 + FastAPI | Lightweight, async-native, built-in SSE support |
 | Database | SQLite via `aiosqlite` | Zero config, single file, sufficient for pilot scale |
 | Templating | Jinja2 | Server-rendered HTML; fast; no build step |
 | Frontend JS | μJS (< 5 KB) | Handles SSE, AJAX form posts, no framework |

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<h2>Admin Panel</h2>
+
+<h3>Pending Submissions Queue</h3>
+{% if submissions %}
+<table>
+    <thead>
+        <tr>
+            <th>Submitted At</th>
+            <th>Repo</th>
+            <th>Lead Email</th>
+            <th>Verify</th>
+            <th>Parse</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in submissions %}
+        <tr>
+            <td>{{ s.submitted_at }}</td>
+            <td><a href="{{ s.github_url }}" target="_blank">{{ s.repo_owner }}/{{ s.repo_name }}</a></td>
+            <td>{{ s.lead_email }}</td>
+            <td>
+                {% if s.verification_status == 'verified' %}✅{% else %}❌{% endif %}
+            </td>
+            <td>
+                {% if s.parse_status == 'ok' %}✅{% elif s.parse_status == 'warnings' %}⚠️{% else %}❌{% endif %}
+            </td>
+            <td><a href="/admin/review/{{ s.id }}"><button>Review</button></a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No pending submissions.</p>
+{% endif %}
+
+<hr>
+
+<h3>Active Projects Dashboard</h3>
+{% if projects %}
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Milestones</th>
+            <th>Last Push</th>
+            <th>Stale</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in projects %}
+        <tr>
+            <td><a href="/projects/{{ p.slug }}">{{ p.title }}</a></td>
+            <td><span class="badge {{ p.status }}">{{ p.status }}</span></td>
+            <td>{{ p.completed_milestones }} / {{ p.total_milestones }}</td>
+            <td>{{ p.last_push_at }}</td>
+            <td>
+                {% if p.is_stale %}
+                <span class="badge stale">Stale ⚠️</span>
+                {% else %}
+                -
+                {% endif %}
+            </td>
+            <td>
+                <form action="/api/admin/sync/{{ p.id }}" method="post" style="display:inline;">
+                    <button type="submit" style="padding:2px 8px; font-size:0.8em;">Force Sync</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No active projects.</p>
+{% endif %}
+{% endblock %}

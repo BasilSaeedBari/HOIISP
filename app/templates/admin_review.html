@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Review Submission{% endblock %}
+
+{% block content %}
+<h2>Review Submission: {{ sub.repo_name }}</h2>
+<p><a href="{{ sub.github_url }}" target="_blank">View on GitHub</a></p>
+
+<h3>Verification Detail</h3>
+<p>Status: {% if sub.verification_status == 'verified' %}✅ Verified{% else %}❌ Failed{% endif %}</p>
+<pre>{{ verify_detail | tojson(indent=2) }}</pre>
+
+<h3>Parser Report</h3>
+<p>Status: 
+    {% if sub.parse_status == 'ok' %}✅ OK
+    {% elif sub.parse_status == 'warnings' %}⚠️ Warnings
+    {% else %}❌ Errors{% endif %}
+</p>
+<pre>{{ parse_report | tojson(indent=2) }}</pre>
+
+<h3>Parsed Preview</h3>
+<div style="border:1px solid #ccc; padding:15px; background:#f9f9f9;">
+    <h4>Title: {{ parsed.title }}</h4>
+    <p><strong>Abstract:</strong> {{ parsed.abstract }}</p>
+    <p><strong>Problem Statement:</strong> {{ parsed.problem_statement }}</p>
+    
+    <h5>Domain & IEEE</h5>
+    <ul>
+        {% for k,v in parsed.domain_data.items() %}
+        <li><strong>{{ k }}:</strong> {{ v }}</li>
+        {% endfor %}
+    </ul>
+
+    <h5>Team</h5>
+    <table>
+        {% for row in parsed.team %}
+        <tr>
+            {% for k,v in row.items() %}
+            <td><strong>{{ k }}:</strong> {{ v }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<hr>
+<div style="display:flex; gap:20px;">
+    <!-- Approve Form -->
+    <div style="flex:1; border: 1px solid #c3e6cb; padding:15px; border-radius:5px; background:#d4edda;">
+        <h4>Approve</h4>
+        <form action="/api/admin/approve/{{ sub.id }}" method="post">
+            <label>Optional Notes</label><br>
+            <textarea name="admin_notes" style="width:100%; height:60px;"></textarea><br><br>
+            <button type="submit" style="background:#28a745; border:none; color:white;">Approve Project</button>
+        </form>
+    </div>
+
+    <!-- Reject Form -->
+    <div style="flex:1; border: 1px solid #f5c6cb; padding:15px; border-radius:5px; background:#f8d7da;">
+        <h4>Reject</h4>
+        <form action="/api/admin/reject/{{ sub.id }}" method="post">
+            <label>Required Reason</label><br>
+            <textarea name="admin_notes" required style="width:100%; height:60px;"></textarea><br><br>
+            <button type="submit" style="background:#dc3545; border:none; color:white;">Reject Project</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

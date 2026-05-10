@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+aiosqlite
+jinja2
+mistune
+python-frontmatter
+httpx
+passlib[bcrypt]
+itsdangerous
+APScheduler
+aiosmtplib
+python-dotenv
+python-multipart

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ p.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:20px;">
+    <h2>{{ p.title }}</h2>
+    <div style="margin-bottom:10px;">
+        <span class="badge {{ p.status }}">{{ p.status }}</span>
+        <span class="badge" style="background:#eee;">{{ p.domain }}</span>
+        {% if is_stale %}<span class="badge stale">Stale ⚠️</span>{% endif %}
+        &nbsp;&nbsp;★ {{ p.stars }}
+    </div>
+    
+    <p>
+        <strong>Repository:</strong> <a href="{{ p.github_url }}" target="_blank">{{ p.github_url }}</a><br>
+        <strong>Approved:</strong> {{ p.approved_at }}<br>
+        <strong>Last Push:</strong> {{ p.last_push_at }}
+    </p>
+</div>
+
+<h3>Team</h3>
+<ul>
+    {% for member in p.team %}
+    <li><strong>{{ member.full_name }}</strong> ({{ member.program }}, Year {{ member.year }}) - {{ member.role }}</li>
+    {% endfor %}
+</ul>
+
+<h3>Abstract</h3>
+<div style="white-space: pre-wrap;">{{ p.abstract }}</div>
+
+<h3>Problem Statement</h3>
+<div style="white-space: pre-wrap;">{{ p.problem_statement }}</div>
+
+<h3>Milestone Tracker</h3>
+<div class="progress-container">
+    {% set pct = 0 %}
+    {% if p.milestones|length > 0 %}
+        {% set comp = p.milestones|selectattr("status", "equalto", "Complete")|list|length %}
+        {% set pct = (comp / p.milestones|length) * 100 %}
+    {% endif %}
+    <div class="progress-bar" style="width: {{ pct }}%;"></div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Milestone</th>
+            <th>Name</th>
+            <th>Planned</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in p.milestones %}
+        <tr>
+            <td>{{ m.number }}</td>
+            <td>{{ m.name }}</td>
+            <td>{{ m.end_date }}</td>
+            <td>{{ m.status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Recent GitHub Activity</h3>
+{% if commits %}
+<ul>
+    {% for c in commits %}
+    <li><a href="{{ c.url }}" target="_blank">{{ c.sha }}</a> - {{ c.message }} ({{ c.author }}, {{ c.date }})</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>GitHub activity unavailable.</p>
+{% endif %}
+
+<h3>Resource Log</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Resource</th>
+            <th>Lab</th>
+            <th>Hours</th>
+            <th>Duration</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in p.resources %}
+        <tr>
+            <td>{{ r.resource_name }}</td>
+            <td>{{ r.lab_location }}</td>
+            <td>{{ r.estimated_hours }}</td>
+            <td>{{ r.required_from }} to {{ r.required_until }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No resources requested.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Faculty Endorsements</h3>
+{% if p.endorsements %}
+<ul>
+    {% for e in p.endorsements %}
+    <li><strong>{{ e.faculty_name }}</strong> ({{ e.faculty_dept }}) - <em>{{ e.endorsement_type }}</em>
+        {% if e.quote %}<br>"{{ e.quote }}"{% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No endorsements yet. Faculty: contact the HOIISP admin.</p>
+{% endif %}
+
+{% endblock %}

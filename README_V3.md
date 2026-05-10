@@ -77,7 +77,7 @@ Students work on GitHub as they normally would. HOIISP watches, verifies, and pr
 
 | Layer | Technology |
 |---|---|
-| Backend | Python 3.11 + FastAPI |
+| Backend | Python 3.14 + FastAPI |
 | Database | SQLite via `aiosqlite` |
 | Templating | Jinja2 (server-rendered HTML) |
 | Frontend | μJS + Sakura.css (no build step) |

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Project Directory{% endblock %}
+
+{% block content %}
+<h2>Project Directory</h2>
+
+<form method="GET" action="/projects" style="background:#f9f9f9; padding:15px; margin-bottom: 20px;">
+    <label>Domain:
+        <select name="domain">
+            <option value="">All Domains</option>
+            <option value="Electrical Engineering" {% if request.query_params.domain == 'Electrical Engineering' %}selected{% endif %}>EE</option>
+            <option value="Computer Science" {% if request.query_params.domain == 'Computer Science' %}selected{% endif %}>CS</option>
+        </select>
+    </label>&nbsp;&nbsp;
+    
+    <label>Status:
+        <select name="status">
+            <option value="">All Statuses</option>
+            <option value="active" {% if request.query_params.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="completed" {% if request.query_params.status == 'completed' %}selected{% endif %}>Completed</option>
+        </select>
+    </label>&nbsp;&nbsp;
+    
+    <label>Sort by:
+        <select name="sort">
+            <option value="stars" {% if request.query_params.sort == 'stars' %}selected{% endif %}>Stars</option>
+            <option value="recent" {% if request.query_params.sort == 'recent' %}selected{% endif %}>Last Push</option>
+            <option value="approved" {% if request.query_params.sort == 'approved' %}selected{% endif %}>Date Approved</option>
+        </select>
+    </label>&nbsp;&nbsp;
+    
+    <button type="submit">Filter</button>
+</form>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px;">
+    {% for p in projects %}
+    <div style="border:1px solid #ccc; padding:15px; border-radius:5px; background:white;">
+        <div style="font-size:0.8em; color:#666; margin-bottom:5px;">
+            [{{ p.domain }}] <span class="badge {{ p.status }}">{{ p.status }}</span>
+            {% if p.is_stale %}<span class="badge stale">Stale ⚠️</span>{% endif %}
+        </div>
+        <h3 style="margin-top:0;"><a href="/projects/{{ p.slug }}">{{ p.title }}</a></h3>
+        <p style="font-size:0.9em;">
+            Team: {{ p.team_size }} members<br>
+            Repo: <a href="{{ p.github_url }}" target="_blank">GitHub</a><br>
+            ★ {{ p.stars }} Stars
+        </p>
+        <div style="font-size:0.8em; color:#555;">
+            Milestones: {{ p.completed_milestones }} of {{ p.total_milestones }} complete<br>
+            Last Push: {{ p.last_push_at }}
+        </div>
+    </div>
+    {% else %}
+    <p>No projects match your criteria.</p>
+    {% endfor %}
+</div>
+{% endblock %}

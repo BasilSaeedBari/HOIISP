@@ -68,7 +68,17 @@ This is the core new integration in V3. It has three distinct responsibilities:
 - **Fetch & Parse** — Read `project.md` from the repo and extract structured data.
 - **Webhook Sync** — React to push events to keep data current without polling.
 
-### 3.1 GitHub Personal Access Token
+### 3.1.1 Github Data Scrapping Via raw (Ideal as this would require no auth, or API key. Ideal for apps that can't store API keys and will be deployed via docker)
+
+HOIISP will use the following URL to get the raw data from the repository:
+
+`https://raw.githubusercontent.com/{owner}/{repo}/{branch}/project.md`
+
+It will retrieve the README.md file from the repository and parse it to extract the project data.
+It will also retrieve the commit history and collaborators list to verify the Habib affiliation.
+It will also retrieve project.md file from the repository and parse it to extract the project data.
+
+### 3.1.2 GitHub Personal Access Token (This is a fallback incase 3.1.1 doenst work)
 
 HOIISP uses a single GitHub PAT (Personal Access Token) with the following scopes:
 - `public_repo` — read access to public repository content and commit history
@@ -86,6 +96,11 @@ HOIISP checks whether any commit in the repository's default branch was authored
 - Reliable: Git commit emails are set in the developer's local config and are embedded in every commit object.
 - Non-invasive: does not require students to make their GitHub profile email public.
 - Auditable: the specific commit(s) that passed verification are stored in the database.
+
+## Fallback Implementation when raw.githubusercontent.com is not accessible (e.g. if GitHub blocks it) (Backup Plan) - 
+
+**NOTE: DO NOT USE IT UNTIL WE HAVE TIRED AND TESTED THE FIRST METHOD AND WE ARE 100% IT IS NOT WORKING**
+
 
 **Implementation (`services/github_client.py`):**
 
@@ -293,7 +308,7 @@ async def get_recent_commits(owner: str, repo: str, count: int = 5) -> list[dict
 
 ---
 
-## 4. Microsoft Teams Integration
+## 4. Microsoft Teams Integration (This part is to be done, after the main website is working, and we have tested that it is accepting github links, and it has a well formated submission page, and leaderboard page)
 
 ### 4.1 Webhook Setup
 
@@ -344,7 +359,7 @@ All Teams calls are non-blocking (FastAPI background tasks). A failed Teams post
 
 ---
 
-## 5. Friday Email Digest
+## 5. Friday Email Digest (This part is to be done via SMTP, mailing, I have those credentials, make a new cred.txt file in which I will add all the details. I have tested the SMTP credentials, and they are working.)
 
 ### 5.1 Purpose
 

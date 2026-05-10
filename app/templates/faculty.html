@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Directory{% endblock %}
+
+{% block content %}
+<h2>Faculty Directory</h2>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px;">
+    {% for f in faculty %}
+    <div style="border:1px solid #ccc; padding:15px; border-radius:5px;">
+        <h3>{{ f.full_name }}</h3>
+        <p style="margin-top:0; color:#666;">{{ f.title }}, {{ f.department }}</p>
+        <p><a href="mailto:{{ f.email }}">{{ f.email }}</a></p>
+        
+        {% if f.expertise_tags %}
+        <div>
+            {% for tag in f.expertise_tags|fromjson %}
+            <span class="badge" style="background:#e9ecef; color:#495057;">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <p style="font-size:0.9em; margin-bottom:0;">
+            Active in <a href="/projects">Projects</a><br>
+            Has Endorsed <a href="/projects">Projects</a>
+        </p>
+    </div>
+    {% else %}
+    <p>No faculty members listed.</p>
+    {% endfor %}
+</div>
+{% endblock %}
