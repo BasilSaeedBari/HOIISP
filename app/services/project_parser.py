@@ -78,24 +78,28 @@ def parse_project_md(md_text: str) -> Dict[str, Any]:
             
             # Match to required sections
             matched = False
-            for section_id, config in REQUIRED_SECTIONS.items():
-                if slug.startswith(section_id) and level == config['level']:
-                    current_section_id = section_id
-                    current_section = config['dbField']
-                    
-                    if current_section not in parsed:
-                        if config.get('type') == 'table' or config.get('type') == 'list':
-                            parsed[current_section] = []
-                        elif config.get('type') == 'mixed' or config.get('type') == 'checkboxes':
-                            parsed[current_section] = {}
-                        else:
-                            parsed[current_section] = ''
-                            
-                        # Edge case for title which is just a heading
-                        if section_id == 'project-title':
-                            parsed[current_section] = heading_text
-                    matched = True
-                    break
+            
+            # Special case: The first level 1 heading is always the project title
+            if level == 1 and 'title' not in parsed:
+                current_section_id = 'project-title'
+                current_section = 'title'
+                parsed[current_section] = heading_text
+                matched = True
+            else:
+                for section_id, config in REQUIRED_SECTIONS.items():
+                    if slug.startswith(section_id) and level == config['level']:
+                        current_section_id = section_id
+                        current_section = config['dbField']
+                        
+                        if current_section not in parsed:
+                            if config.get('type') == 'table' or config.get('type') == 'list':
+                                parsed[current_section] = []
+                            elif config.get('type') == 'mixed' or config.get('type') == 'checkboxes':
+                                parsed[current_section] = {}
+                            else:
+                                parsed[current_section] = ''
+                        matched = True
+                        break
                     
             if not matched:
                 if level <= 2:
