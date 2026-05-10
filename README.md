@@ -245,3 +245,6 @@ Mount a volume for `app.db` for persistence. No other services needed.
 | `WebsiteV3.md` | Full UX and page-by-page specification |
 | `IntegrationV3.md` | GitHub API, webhook, email digest, and Teams integration spec |
 | `README.md` | This file |
+
+## Contributers
+- Basil Saeed Bari : bb09892@st.habib.edu.pk
