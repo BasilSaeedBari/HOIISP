@@ -265,6 +265,52 @@ async def create_project_from_submission(submission: dict, parsed_data: dict, la
     await db.close()
     return project_id
 
+async def force_sync_project(project_id: int, parsed_data: dict, last_push_at: str = None):
+    db = await get_db()
+    
+    domain_data = parsed_data.get('domain_data', {})
+    
+    # Update project
+    await db.execute(
+        '''UPDATE projects SET title=?, abstract=?, problem_statement=?, domain=?, sub_field=?, ieee_society=?, methodology=?, last_push_at=?, last_sync_at=datetime('now')
+           WHERE id=?''',
+        (parsed_data.get('title'), parsed_data.get('abstract'), parsed_data.get('problem_statement'), domain_data.get('domain'), domain_data.get('sub_field'), domain_data.get('ieee_society'), parsed_data.get('methodology'), last_push_at, project_id)
+    )
+    
+    # Delete existing child rows
+    await db.execute("DELETE FROM team_members WHERE project_id=?", (project_id,))
+    await db.execute("DELETE FROM milestones WHERE project_id=?", (project_id,))
+    await db.execute("DELETE FROM resources WHERE project_id=?", (project_id,))
+    await db.execute("DELETE FROM success_metrics WHERE project_id=?", (project_id,))
+    
+    # Re-insert child rows
+    for member in parsed_data.get('team', []):
+        await db.execute(
+            "INSERT INTO team_members (project_id, full_name, student_id, github_username, habib_email, program, year, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (project_id, member.get('Full Name'), member.get('Student ID'), member.get('GitHub Username'), member.get('Habib Email'), member.get('Program'), member.get('Year'), member.get('Role'))
+        )
+
+    for m in parsed_data.get('milestones', []):
+        await db.execute(
+            "INSERT INTO milestones (project_id, number, name, deliverables, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (project_id, m.get('Milestone #'), m.get('Milestone Name'), m.get('Key Deliverables'), m.get('Start Date'), m.get('End Date'), m.get('Status', 'Not Started'))
+        )
+    
+    for r in parsed_data.get('resources', []):
+        await db.execute(
+            "INSERT INTO resources (project_id, resource_name, lab_location, estimated_hours, purpose, required_from, required_until) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (project_id, r.get('Resource'), r.get('Lab / Location'), r.get('Estimated Hours'), r.get('Purpose in Project'), r.get('Required From'), r.get('Required Until'))
+        )
+        
+    for m in parsed_data.get('success_metrics', []):
+        await db.execute(
+            "INSERT INTO success_metrics (project_id, metric_text, target_value, measurement_method) VALUES (?, ?, ?, ?)",
+            (project_id, m.get('Metric', ''), m.get('Target Value'), m.get('Measurement Method'))
+        )
+        
+    await db.commit()
+    await db.close()
+
 async def get_projects(domain: str = None, status: str = None, sort: str = "stars"):
     db = await get_db()
     query = "SELECT projects.*, (SELECT COUNT(*) FROM endorsements WHERE project_id = projects.id AND endorsement_type='star') as stars FROM projects WHERE 1=1"

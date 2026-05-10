@@ -1,5 +1,4 @@
-# Project Title
-HOIISP V3: A Modern, Serverless-Inspired Project Management Discovery Engine
+# Habib Open Innovation & Independent Study Platform
 
 ---
 

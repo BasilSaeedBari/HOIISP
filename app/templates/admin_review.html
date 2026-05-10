@@ -26,21 +26,50 @@
     
     <h5>Domain & IEEE</h5>
     <ul>
-        {% for k,v in parsed.domain_data.items() %}
+        {% if parsed.get('domain_data') %}
+        {% for k,v in parsed.get('domain_data').items() %}
+        {% if v != False %}
         <li><strong>{{ k }}:</strong> {{ v }}</li>
+        {% endif %}
         {% endfor %}
+        {% else %}
+        <li>No domain data parsed.</li>
+        {% endif %}
     </ul>
 
     <h5>Team</h5>
+    <div style="overflow-x: auto; margin-bottom: 15px;">
     <table>
-        {% for row in parsed.team %}
+        {% if parsed.get('team') %}
+        {% for row in parsed.get('team') %}
         <tr>
             {% for k,v in row.items() %}
             <td><strong>{{ k }}:</strong> {{ v }}</td>
             {% endfor %}
         </tr>
         {% endfor %}
+        {% else %}
+        <tr><td>No team data parsed.</td></tr>
+        {% endif %}
     </table>
+    </div>
+
+    <h5>Milestones</h5>
+    <div style="overflow-x: auto; margin-bottom: 15px;">
+    <table>
+        {% if parsed.get('milestones') %}
+        {% for row in parsed.get('milestones') %}
+        <tr>
+            {% for k,v in row.items() %}
+            <td><strong>{{ k }}:</strong> {{ v }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr><td>No milestones parsed.</td></tr>
+        {% endif %}
+    </table>
+    </div>
 </div>
 
 <hr>

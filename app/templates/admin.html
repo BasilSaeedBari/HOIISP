@@ -7,6 +7,7 @@
 
 <h3>Pending Submissions Queue</h3>
 {% if submissions %}
+<div style="overflow-x: auto;">
 <table>
     <thead>
         <tr>
@@ -35,6 +36,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% else %}
 <p>No pending submissions.</p>
 {% endif %}
@@ -43,6 +45,7 @@
 
 <h3>Active Projects Dashboard</h3>
 {% if projects %}
+<div style="overflow-x: auto;">
 <table>
     <thead>
         <tr>
@@ -77,6 +80,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% else %}
 <p>No active projects.</p>
 {% endif %}

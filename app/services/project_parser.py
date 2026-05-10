@@ -22,7 +22,7 @@ def parse_project_md(md_text: str) -> Dict[str, Any]:
     post = frontmatter.loads(md_text)
     content = post.content
     
-    markdown = mistune.create_markdown(renderer='ast')
+    markdown = mistune.create_markdown(renderer='ast', plugins=['table'])
     ast = markdown(content)
     
     parsed = {}
@@ -30,17 +30,24 @@ def parse_project_md(md_text: str) -> Dict[str, Any]:
     current_section_id = None
     
     def get_text(node):
+        text = ""
         if 'children' in node:
-            return ''.join(get_text(c) for c in node['children'])
+            for c in node['children']:
+                text += get_text(c)
+                if c.get('type') in ['paragraph', 'list_item', 'block_text']:
+                    text += '\n'
+            return text
         if 'text' in node:
             return node['text']
+        if 'raw' in node:
+            return node['raw']
         return ''
         
     def parse_table(table_node):
         header_node = table_node['children'][0]
         body_node = table_node['children'][1] if len(table_node['children']) > 1 else None
         
-        headers = [get_text(th).strip() for th in header_node['children'][0]['children']]
+        headers = [get_text(th).strip() for th in header_node['children']]
         
         rows = []
         if body_node:
@@ -67,11 +74,12 @@ def parse_project_md(md_text: str) -> Dict[str, Any]:
         if node['type'] == 'heading':
             heading_text = get_text(node)
             slug = slugify(heading_text)
+            level = node.get('attrs', {}).get('level') or node.get('level')
             
             # Match to required sections
             matched = False
             for section_id, config in REQUIRED_SECTIONS.items():
-                if slug.startswith(section_id) and node.get('level') == config['level']:
+                if slug.startswith(section_id) and level == config['level']:
                     current_section_id = section_id
                     current_section = config['dbField']
                     
@@ -90,8 +98,17 @@ def parse_project_md(md_text: str) -> Dict[str, Any]:
                     break
                     
             if not matched:
-                current_section = None
-                current_section_id = None
+                if level <= 2:
+                    current_section = None
+                    current_section_id = None
+                elif current_section and REQUIRED_SECTIONS[current_section_id].get('type') is None:
+                    # Treat sub-heading as content
+                    prefix = '#' * level
+                    text = f"{prefix} {heading_text}"
+                    if parsed[current_section]:
+                        parsed[current_section] += '\n\n' + text
+                    else:
+                        parsed[current_section] = text
                 
         elif current_section:
             config = REQUIRED_SECTIONS[current_section_id]
@@ -107,10 +124,10 @@ def parse_project_md(md_text: str) -> Dict[str, Any]:
                 lines = text.split('\n')
                 for line in lines:
                     line = line.strip()
-                    if line.startswith('- [x]') or line.startswith('- [X]'):
-                        parsed[current_section][line[5:].strip()] = True
-                    elif line.startswith('- [ ]'):
-                        parsed[current_section][line[5:].strip()] = False
+                    if line.startswith('[x]') or line.startswith('[X]') or line.startswith('- [x]') or line.startswith('- [X]'):
+                        parsed[current_section][line.split(']', 1)[1].strip()] = True
+                    elif line.startswith('[ ]') or line.startswith('- [ ]'):
+                        parsed[current_section][line.split(']', 1)[1].strip()] = False
                     elif ':' in line and node_type == 'mixed':
                         k, v = line.split(':', 1)
                         if k.startswith('**') and k.endswith('**'):

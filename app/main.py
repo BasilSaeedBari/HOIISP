@@ -152,7 +152,7 @@ async def render_leaderboard_tbody():
         """
     if not html:
         html = '<tr><td colspan="8">No active projects.</td></tr>'
-    return html
+    return html.replace('\n', '')
 
 @app.get("/api/stream/leaderboard")
 async def stream_leaderboard(request: Request):
@@ -162,7 +162,7 @@ async def stream_leaderboard(request: Request):
     async def event_generator():
         # Send initial state
         initial_html = await render_leaderboard_tbody()
-        yield f"data: {initial_html}\\n\\n"
+        yield f"data: {initial_html}\n\n"
         
         try:
             while True:
@@ -170,7 +170,7 @@ async def stream_leaderboard(request: Request):
                 if await request.is_disconnected():
                     break
                 html = await queue.get()
-                yield f"data: {html}\\n\\n"
+                yield f"data: {html}\n\n"
         except asyncio.CancelledError:
             pass
         finally:
@@ -340,5 +340,30 @@ async def reject_submission(request: Request, sub_id: int, background_tasks: Bac
         'repo_url': sub['github_url'],
         'reason': admin_notes
     })
+    
+    return RedirectResponse(url="/admin", status_code=303)
+
+@app.post("/api/admin/sync/{p_id}")
+async def sync_project(request: Request, p_id: int, background_tasks: BackgroundTasks):
+    red = admin_required(request)
+    if red: return red
+    
+    proj_list = await db.get_projects()
+    p = next((x for x in proj_list if x['id'] == p_id), None)
+    if not p:
+        raise HTTPException(status_code=404)
+        
+    md_text = await github_client.fetch_project_md(p['repo_owner'], p['repo_name'])
+    if not md_text:
+        return RedirectResponse(url="/admin", status_code=303)
+        
+    parsed = project_parser.parse_project_md(md_text)
+    
+    commits = await github_client.get_recent_commits(p['repo_owner'], p['repo_name'], count=1)
+    last_push = commits[0]['date'] if commits else p.get('last_push_at')
+    
+    await db.force_sync_project(p_id, parsed, last_push)
+    
+    background_tasks.add_task(broadcast_leaderboard_update)
     
     return RedirectResponse(url="/admin", status_code=303)
