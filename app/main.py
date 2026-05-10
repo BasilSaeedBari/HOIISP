@@ -60,7 +60,7 @@ def admin_required(request: Request):
 async def index(request: Request):
     stats = await db.get_stats()
     recent_events = await db.get_recent_webhooks()
-    return templates.TemplateResponse("index.html", {
+    return templates.TemplateResponse(request, "index.html", {
         "request": request, 
         "stats": {"active": stats[0], "endorsements": stats[1], "hours": stats[2]},
         "recent_events": recent_events
@@ -82,7 +82,7 @@ async def projects(request: Request, domain: str = None, status: str = None, sor
             except:
                 pass
 
-    return templates.TemplateResponse("projects.html", {"request": request, "projects": proj_list})
+    return templates.TemplateResponse(request, "projects.html", {"request": request, "projects": proj_list})
 
 @app.get("/projects/{slug}", response_class=HTMLResponse)
 async def project_detail(request: Request, slug: str):
@@ -102,7 +102,7 @@ async def project_detail(request: Request, slug: str):
         except:
             pass
 
-    return templates.TemplateResponse("project_detail.html", {
+    return templates.TemplateResponse(request, "project_detail.html", {
         "request": request, 
         "p": p, 
         "commits": commits,
@@ -111,12 +111,12 @@ async def project_detail(request: Request, slug: str):
 
 @app.get("/submit", response_class=HTMLResponse)
 async def submit_page(request: Request):
-    return templates.TemplateResponse("submit.html", {"request": request})
+    return templates.TemplateResponse(request, "submit.html", {"request": request})
 
 @app.get("/faculty", response_class=HTMLResponse)
 async def faculty(request: Request):
     fac_list = await db.get_all_faculty()
-    return templates.TemplateResponse("faculty.html", {"request": request, "faculty": fac_list})
+    return templates.TemplateResponse(request, "faculty.html", {"request": request, "faculty": fac_list})
 
 @app.get("/terms", response_class=HTMLResponse)
 async def terms(request: Request):
@@ -128,7 +128,7 @@ async def terms(request: Request):
             html = mistune.html(content)
     else:
         html = "<p>Terms not found.</p>"
-    return templates.TemplateResponse("terms.html", {"request": request, "terms_html": html})
+    return templates.TemplateResponse(request, "terms.html", {"request": request, "terms_html": html})
 
 # --- SSE Endpoint ---
 
@@ -230,13 +230,13 @@ async def api_submit(
 async def admin_login_page(request: Request):
     if request.session.get("admin_logged_in"):
         return RedirectResponse(url="/admin", status_code=303)
-    return templates.TemplateResponse("admin_login.html", {"request": request})
+    return templates.TemplateResponse(request, "admin_login.html", {"request": request})
 
 @app.post("/api/admin/login")
 async def admin_login(request: Request, email: str = Form(...), password: str = Form(...)):
     user = await db.get_admin_user(email)
     if not user or not db.verify_password(password, user["password_hash"]):
-        return templates.TemplateResponse("admin_login.html", {"request": request, "error": "Invalid credentials"})
+        return templates.TemplateResponse(request, "admin_login.html", {"request": request, "error": "Invalid credentials"})
         
     request.session["admin_logged_in"] = user["email"]
     return RedirectResponse(url="/admin", status_code=303)
@@ -255,7 +255,7 @@ async def admin_panel(request: Request):
     pending = [s for s in submissions if s['status'] == 'pending']
     projects = await db.get_projects()
     
-    return templates.TemplateResponse("admin.html", {
+    return templates.TemplateResponse(request, "admin.html", {
         "request": request, 
         "submissions": pending,
         "projects": projects
@@ -279,7 +279,7 @@ async def admin_review(request: Request, sub_id: int):
     verify_detail = json.loads(sub['verification_detail']) if sub['verification_detail'] else {}
     parse_report = json.loads(sub['parse_report']) if sub['parse_report'] else {}
     
-    return templates.TemplateResponse("admin_review.html", {
+    return templates.TemplateResponse(request, "admin_review.html", {
         "request": request, 
         "sub": sub,
         "verify_detail": verify_detail,

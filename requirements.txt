@@ -5,7 +5,7 @@ jinja2
 mistune
 python-frontmatter
 httpx
-passlib[bcrypt]
+bcrypt
 itsdangerous
 APScheduler
 aiosmtplib

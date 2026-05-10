@@ -1,17 +1,22 @@
 import aiosqlite
 import json
 from .config import DATABASE_PATH
-from passlib.context import CryptContext
+import bcrypt
 from datetime import date, timedelta
 from typing import Optional, List, Dict, Any
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode('utf-8')
+    if isinstance(plain_password, str):
+        plain_password = plain_password.encode('utf-8')
+    return bcrypt.checkpw(plain_password, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    if isinstance(password, str):
+        password = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password, salt).decode('utf-8')
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS admin_users (
