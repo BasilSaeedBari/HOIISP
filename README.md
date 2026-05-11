@@ -177,11 +177,29 @@ Default admin account seeded on every run:
 
 ## Running with Docker (Portainer Ready)
 
-```bash
-docker compose up --build -d
-```
+HOIISP is configured to automatically build and publish its Docker image to the GitHub Container Registry (`ghcr.io`) whenever you push code to GitHub.
 
-The `docker-compose.yml` is pre-configured to mount a persistent volume (`hoiisp_data`) to `/app/data` inside the container. This ensures your SQLite database survives container updates and restarts.
+To deploy it in Portainer, simply create a new Stack using this Compose file:
+
+```yaml
+version: '3.8'
+
+services:
+  hoiisp:
+    image: ghcr.io/basilsaeedbari/HOIISP:latest
+    container_name: hoiisp_app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - hoiisp_data:/app/data
+    environment:
+      - SECRET_KEY=your-secure-random-string
+      - HOIISP_BASE_URL=https://hoiisp.basilsaeedbari.com
+
+volumes:
+  hoiisp_data:
+```
 
 All environment variables can be securely injected using Portainer's environment variable interface. No local `.env` file is required for Docker deployments.
 
