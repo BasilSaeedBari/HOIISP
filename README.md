@@ -29,7 +29,7 @@ Students work on GitHub as they normally would. HOIISP watches, verifies, and pr
 1. Create a GitHub repository for your project.
 2. Add a `project.md` to the root of the repo, following the format in `ProjectFormat.md`.
 3. Make sure at least one contributor has committed using a `@st.habib.edu.pk` email address (this is how HOIISP verifies you are a Habib student).
-4. Submit your GitHub repo URL at `hoiisp.habib.edu.pk/submit` — no account required.
+4. Submit your GitHub repo URL at `hoiisp.basilsaeedbari.com/submit` — no account required.
 5. An admin reviews the submission (within 48 hours). If approved, your project page goes live automatically.
 6. From that point forward, every push to your repo that changes `project.md` is reflected on HOIISP within minutes. You never need to touch the HOIISP website again.
 
