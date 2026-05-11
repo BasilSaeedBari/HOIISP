@@ -2,7 +2,7 @@
 
 **Version:** 3.0  
 **Status:** Specification — Clean Reimplementation  
-**Last Revised:** May 2026
+**Last Revised:** May 2026  
 **Website:** [HOIISP](https://www.hoiisp.basilsaeedbari.com)
 
 ---
