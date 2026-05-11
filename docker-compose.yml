@@ -12,7 +12,7 @@ services:
     environment:
       # Application Configuration
       - SECRET_KEY=replace-me-with-a-secure-random-string
-      - HOIISP_BASE_URL=https://HOIISP.basilsaeedbari.com
+      - HOIISP_BASE_URL=http://127.0.0.1:8000
       
       # GitHub Webhook Authentication
       - GITHUB_WEBHOOK_SECRET=replace-me

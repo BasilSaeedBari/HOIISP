@@ -186,7 +186,7 @@ version: '3.8'
 
 services:
   hoiisp:
-    image: ghcr.io/basilsaeedbari/HOIISP:latest
+    image: ghcr.io/basilsaeedbari/hoiisp:latest
     container_name: hoiisp_app
     restart: always
     ports:
@@ -195,7 +195,7 @@ services:
       - hoiisp_data:/app/data
     environment:
       - SECRET_KEY=your-secure-random-string
-      - HOIISP_BASE_URL=https://hoiisp.basilsaeedbari.com
+      - HOIISP_BASE_URL=http://127.0.0.1:8000
 
 volumes:
   hoiisp_data:
