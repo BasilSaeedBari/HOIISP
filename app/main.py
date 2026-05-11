@@ -251,7 +251,11 @@ async def api_submit(
         parse_status, val
     )
     
-    return {"message": "Submitted — you'll hear back within 48 hours."}
+    # Notify Admin if email is configured
+    from app.services import email_service
+    background_tasks.add_task(email_service.send_admin_notification_email, parsed.get('title', repo), github_url)
+    
+    return RedirectResponse(url="/submit?success=1", status_code=303)
 
 
 # --- Admin Routes ---
@@ -291,6 +295,7 @@ async def admin_panel(request: Request):
         'port': await db.get_setting('smtp_port', config.SMTP_PORT),
         'user': await db.get_setting('smtp_user', config.SMTP_USER),
         'sender': await db.get_setting('smtp_sender', config.SMTP_USER),
+        'notify_email': await db.get_setting('admin_notify_email', '')
     }
     
     return templates.TemplateResponse(request, "admin.html", {
@@ -450,7 +455,8 @@ async def update_smtp_settings(
     port: str = Form(...),
     user: str = Form(...),
     sender: str = Form(...),
-    password: str = Form(None)
+    password: str = Form(None),
+    notify_email: str = Form(None)
 ):
     red = admin_required(request)
     if red: return red
@@ -461,6 +467,8 @@ async def update_smtp_settings(
     await db.set_setting('smtp_sender', sender)
     if password and password.strip():
         await db.set_setting('smtp_password', password.strip())
+    if notify_email is not None:
+        await db.set_setting('admin_notify_email', notify_email.strip())
         
     return RedirectResponse(url="/admin", status_code=303)
 

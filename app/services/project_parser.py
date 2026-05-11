@@ -128,15 +128,49 @@ def parse_project_md(md_text: str) -> Dict[str, Any]:
                 lines = text.split('\n')
                 for line in lines:
                     line = line.strip()
-                    if line.startswith('[x]') or line.startswith('[X]') or line.startswith('- [x]') or line.startswith('- [X]'):
-                        parsed[current_section][line.split(']', 1)[1].strip()] = True
-                    elif line.startswith('[ ]') or line.startswith('- [ ]'):
-                        parsed[current_section][line.split(']', 1)[1].strip()] = False
+                    if not line:
+                        continue
+                    
+                    is_checked = None
+                    checkbox_label = None
+                    
+                    if line.startswith(('[x]', '[X]', '- [x]', '- [X]')):
+                        is_checked = True
+                        checkbox_label = line.split(']', 1)[1].strip()
+                    elif line.startswith(('[ ]', '- [ ]')):
+                        is_checked = False
+                        checkbox_label = line.split(']', 1)[1].strip()
+                        
+                    if checkbox_label is not None:
+                        parsed[current_section][checkbox_label] = is_checked
+                        # For domain_data, the first checked box is the domain
+                        if current_section == 'domain_data' and is_checked:
+                            # If it's "Other: ...", extract the part after the colon if any
+                            if checkbox_label.lower().startswith('other'):
+                                if ':' in checkbox_label:
+                                    parsed[current_section]['domain'] = checkbox_label.split(':', 1)[1].strip()
+                                else:
+                                    parsed[current_section]['domain'] = 'Other'
+                            else:
+                                parsed[current_section]['domain'] = checkbox_label
                     elif ':' in line and node_type == 'mixed':
                         k, v = line.split(':', 1)
                         if k.startswith('**') and k.endswith('**'):
                             k = k[2:-2]
-                        parsed[current_section][k.strip()] = v.strip()
+                        k_clean = k.strip()
+                        v_clean = v.strip()
+                        parsed[current_section][k_clean] = v_clean
+                        
+                        # Normalize keys for domain_data
+                        if current_section == 'domain_data':
+                            kl = k_clean.lower()
+                            if 'sub-field' in kl or 'specialization' in kl:
+                                parsed[current_section]['sub_field'] = v_clean
+                            elif 'ieee technical society' in kl:
+                                parsed[current_section]['ieee_society'] = v_clean
+                            elif 'primary domain' in kl and not parsed[current_section].get('domain'):
+                                # Fallback if they just typed it
+                                parsed[current_section]['domain'] = v_clean
             elif node_type is None:
                 # Text content
                 text = get_text(node)

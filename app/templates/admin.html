@@ -109,6 +109,10 @@
         <input type="password" name="password" placeholder="Enter new password to change...">
         <small style="color: #666; margin-left: 10px;">Leave blank to keep current password.</small>
     </div>
+    <div style="margin-bottom: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+        <label for="notify_email" style="display:inline-block; width: 150px; font-weight: bold;">Admin Notify Email:</label>
+        <input type="email" name="notify_email" value="{{ smtp.notify_email }}" placeholder="Receive submission alerts here">
+    </div>
     <button type="submit" style="background-color: #28a745; color: white;">Save Configuration</button>
 </form>
 
