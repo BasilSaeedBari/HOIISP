@@ -104,7 +104,7 @@ Students work on GitHub as they normally would. HOIISP watches, verifies, and pr
 │   │   ├── github_client.py      # GitHub API: verify, fetch, parse
 │   │   ├── project_parser.py     # project.md structural parser (mistune)
 │   │   ├── teams_notifier.py     # Teams webhook sender
-│   │   ├── email_digest.py       # Friday digest composer and sender
+│   │   ├── email_service.py      # Digest composer and sender
 │   │   └── scheduler.py          # APScheduler job definitions
 │   ├── static/
 │   │   └── app.js                # μJS micro-library
@@ -118,13 +118,12 @@ Students work on GitHub as they normally would. HOIISP watches, verifies, and pr
 │       ├── admin.html            # Admin panel
 │       ├── admin_review.html     # Single submission review
 │       └── terms.html
-├── Dockerfile
-├── docker-compose.yml
+├── docs/                         # Specifications and UI/UX design documents
+├── tests/                        # Test scripts (e.g. parser, sse tests)
+├── Dockerfile                    # Standalone docker image definition
+├── docker-compose.yml            # Portainer-ready compose file
 ├── requirements.txt
-├── ProjectFormat.md              # Spec for student's project.md (this ships to students)
-├── TermsAndConditions.md
-├── WebsiteV3.md
-├── IntegrationV3.md
+├── project_template.md           # The template users download from the website
 └── README.md
 ```
 
@@ -138,20 +137,15 @@ SECRET_KEY=replace-with-random-string
 DATABASE_PATH=./app.db
 
 # GitHub
-GITHUB_TOKEN=ghp_...              # Personal access token (read:user, read:email, repo scopes)
 GITHUB_WEBHOOK_SECRET=replace-me  # Used to verify incoming push events
+HOIISP_BASE_URL=https://hoiisp.habib.edu.pk
 
 # Microsoft Teams
 TEAMS_WEBHOOK_URL=https://...
 
-# Email Digest
-SMTP_HOST=smtp.habib.edu.pk
-SMTP_PORT=587
-SMTP_USER=hoiisp@habib.edu.pk
-SMTP_PASSWORD=...
-DIGEST_RECIPIENTS=faculty-list@habib.edu.pk,hoiisp-admin@habib.edu.pk
-DIGEST_SEND_DAY=friday            # Day of week for digest (default: friday)
-DIGEST_SEND_TIME=08:00            # Time in 24h format (server local time)
+# Note: SMTP configurations (Host, Port, User, Sender, Password) and 
+# the Mailing List are now managed dynamically via the Admin Panel UI 
+# and stored securely in the database.
 ```
 
 ---
@@ -175,19 +169,21 @@ uvicorn app.main:app --reload
 http://127.0.0.1:8000
 ```
 
-Default admin account seeded on first run:
-- Email: `admin@hoiisp.local`
-- Password: `admin123` — **change immediately**
+Default admin account seeded on every run:
+- Username: `admin`
+- Password: `adminpass`
 
 ---
 
-## Running with Docker
+## Running with Docker (Portainer Ready)
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
-Mount a volume for `app.db` for persistence. No other services needed.
+The `docker-compose.yml` is pre-configured to mount a persistent volume (`hoiisp_data`) to `/app/data` inside the container. This ensures your SQLite database survives container updates and restarts.
+
+All environment variables can be securely injected using Portainer's environment variable interface. No local `.env` file is required for Docker deployments.
 
 ---
 
@@ -240,10 +236,10 @@ Mount a volume for `app.db` for persistence. No other services needed.
 
 | File | Purpose |
 |---|---|
-| `ProjectFormat.md` | The template students copy into their GitHub repo as `project.md` |
-| `TermsAndConditions.md` | Rendered at `/terms`; students agree at submission |
-| `WebsiteV3.md` | Full UX and page-by-page specification |
-| `IntegrationV3.md` | GitHub API, webhook, email digest, and Teams integration spec |
+| `project_template.md` | The template students copy into their GitHub repo as `project.md` |
+| `docs/TermsAndConditionsV3.md` | Rendered at `/terms`; students agree at submission |
+| `docs/WebsiteV3.md` | Full UX and page-by-page specification |
+| `docs/IntegrationV3.md` | GitHub API, webhook, email digest, and Teams integration spec |
 | `README.md` | This file |
 
 ## Contributers

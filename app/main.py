@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, Depends, UploadFile, File
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -11,9 +11,32 @@ from datetime import datetime
 import os
 
 from app import db, config
-from app.services import github_client, project_parser, teams_notifier
+from app.services import github_client, project_parser, teams_notifier, email_service
 
 logger = logging.getLogger(__name__)
+
+# --- Debug Logging Queue ---
+debug_clients = []
+
+class MemoryLogHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            try:
+                loop = asyncio.get_running_loop()
+                for q in debug_clients:
+                    loop.call_soon_threadsafe(q.put_nowait, msg)
+            except RuntimeError:
+                pass
+        except Exception:
+            pass
+
+log_handler = MemoryLogHandler()
+log_handler.setFormatter(logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s'))
+logger.addHandler(log_handler)
+logging.getLogger("uvicorn.access").addHandler(log_handler)
+logging.getLogger("uvicorn.error").addHandler(log_handler)
+logging.getLogger("fastapi").addHandler(log_handler)
 
 # --- Global SSE queue list ---
 # (In a real app, you might use a pub-sub or more robust queue management)
@@ -65,6 +88,13 @@ async def index(request: Request):
         "stats": {"active": stats[0], "endorsements": stats[1], "hours": stats[2]},
         "recent_events": recent_events
     })
+
+@app.get("/download-template")
+async def download_template():
+    file_path = os.path.join(BASE_DIR, "..", "project_template.md")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Template not found")
+    return FileResponse(path=file_path, filename="project_template.md", media_type="text/markdown")
 
 @app.get("/projects", response_class=HTMLResponse)
 async def projects(request: Request, domain: str = None, status: str = None, sort: str = "stars"):
@@ -254,11 +284,21 @@ async def admin_panel(request: Request):
     submissions = await db.get_all_submissions()
     pending = [s for s in submissions if s['status'] == 'pending']
     projects = await db.get_projects()
+    mailing_list = await db.get_mailing_list()
+    
+    smtp_settings = {
+        'host': await db.get_setting('smtp_host', config.SMTP_HOST),
+        'port': await db.get_setting('smtp_port', config.SMTP_PORT),
+        'user': await db.get_setting('smtp_user', config.SMTP_USER),
+        'sender': await db.get_setting('smtp_sender', config.SMTP_USER),
+    }
     
     return templates.TemplateResponse(request, "admin.html", {
         "request": request, 
         "submissions": pending,
-        "projects": projects
+        "projects": projects,
+        "mailing_list": mailing_list,
+        "smtp": smtp_settings
     })
 
 @app.get("/admin/review/{sub_id}", response_class=HTMLResponse)
@@ -317,9 +357,6 @@ async def approve_submission(request: Request, sub_id: int, background_tasks: Ba
         'domain': parsed.get('domain_data', {}).get('domain', 'Unknown')
     })
     
-    # Register webhook
-    background_tasks.add_task(github_client.register_webhook, sub['repo_owner'], sub['repo_name'], config.HOIISP_BASE_URL)
-    
     # Broadcast update to leaderboard
     background_tasks.add_task(broadcast_leaderboard_update)
     
@@ -367,3 +404,89 @@ async def sync_project(request: Request, p_id: int, background_tasks: Background
     background_tasks.add_task(broadcast_leaderboard_update)
     
     return RedirectResponse(url="/admin", status_code=303)
+
+@app.post("/api/admin/mailing_list/add")
+async def add_single_email(request: Request, email: str = Form(...)):
+    red = admin_required(request)
+    if red: return red
+    
+    if '@' in email:
+        await db.add_emails_to_mailing_list([email.strip()])
+        
+    return RedirectResponse(url="/admin", status_code=303)
+
+@app.post("/api/admin/mailing_list/upload")
+async def upload_mailing_list(request: Request, file: UploadFile = File(...)):
+    red = admin_required(request)
+    if red: return red
+    
+    content = await file.read()
+    text = content.decode('utf-8')
+    emails = [e.strip() for e in text.replace('\n', ',').split(',') if '@' in e]
+    
+    await db.add_emails_to_mailing_list(emails)
+    return RedirectResponse(url="/admin", status_code=303)
+
+@app.post("/api/admin/mailing_list/remove/{email_id}")
+async def remove_from_mailing_list(request: Request, email_id: int):
+    red = admin_required(request)
+    if red: return red
+    
+    await db.remove_email_from_mailing_list(email_id)
+    return RedirectResponse(url="/admin", status_code=303)
+
+@app.post("/api/admin/mailing_list/send")
+async def send_digest(request: Request, background_tasks: BackgroundTasks):
+    red = admin_required(request)
+    if red: return red
+    
+    background_tasks.add_task(email_service.send_digest_email)
+    return RedirectResponse(url="/admin", status_code=303)
+
+@app.post("/api/admin/settings/smtp")
+async def update_smtp_settings(
+    request: Request,
+    host: str = Form(...),
+    port: str = Form(...),
+    user: str = Form(...),
+    sender: str = Form(...),
+    password: str = Form(None)
+):
+    red = admin_required(request)
+    if red: return red
+    
+    await db.set_setting('smtp_host', host)
+    await db.set_setting('smtp_port', port)
+    await db.set_setting('smtp_user', user)
+    await db.set_setting('smtp_sender', sender)
+    if password and password.strip():
+        await db.set_setting('smtp_password', password.strip())
+        
+    return RedirectResponse(url="/admin", status_code=303)
+
+@app.get("/api/admin/stream/logs")
+async def stream_logs(request: Request):
+    red = admin_required(request)
+    if red: return red
+    
+    queue = asyncio.Queue()
+    debug_clients.append(queue)
+    
+    async def log_generator():
+        yield "data: Connected to live debug stream...\n\n"
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    msg = await asyncio.wait_for(queue.get(), timeout=1.0)
+                    msg = msg.replace('\n', ' | ')
+                    yield f"data: {msg}\n\n"
+                except asyncio.TimeoutError:
+                    yield "data: \n\n"
+        except asyncio.CancelledError:
+            pass
+        finally:
+            debug_clients.remove(queue)
+                
+    return StreamingResponse(log_generator(), media_type="text/event-stream")

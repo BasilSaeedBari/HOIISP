@@ -1,0 +1,12 @@
+.venv/
+.git/
+__pycache__/
+*.pyc
+app.db
+hoiisp.db
+tests/
+docs/
+.env
+.env.example
+*.md
+!project_template.md

@@ -6,14 +6,10 @@ from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger(__name__)
 
-# Use GITHUB_TOKEN if available, otherwise proceed unauthenticated
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 HEADERS = {
     "Accept": "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
 }
-if GITHUB_TOKEN:
-    HEADERS["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
 HABIB_STUDENT_DOMAIN = "@st.habib.edu.pk"
 
@@ -119,28 +115,4 @@ async def get_recent_commits(owner: str, repo: str, count: int = 5) -> List[Dict
         except Exception:
             return []
 
-async def register_webhook(owner: str, repo: str, hoiisp_base_url: str):
-    """
-    Registers a push webhook on the repo. Requires GITHUB_TOKEN with repo scope.
-    """
-    if not GITHUB_TOKEN:
-        logger.warning("No GITHUB_TOKEN available, skipping webhook registration.")
-        return
-        
-    url = f"https://api.github.com/repos/{owner}/{repo}/hooks"
-    payload = {
-        "name": "web",
-        "active": True,
-        "events": ["push"],
-        "config": {
-            "url": f"{hoiisp_base_url}/api/webhook/github",
-            "content_type": "json",
-            "secret": os.getenv("GITHUB_WEBHOOK_SECRET", "dummy"),
-            "insecure_ssl": "0",
-        },
-    }
-    async with httpx.AsyncClient(headers=HEADERS) as client:
-        try:
-            await client.post(url, json=payload)
-        except Exception as e:
-            logger.error(f"Failed to register webhook: {e}")
+

@@ -6,7 +6,6 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "replace-with-random-string-for-dev")
 DATABASE_PATH = os.getenv("DATABASE_PATH", "./app.db")
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 HOIISP_BASE_URL = os.getenv("HOIISP_BASE_URL", "http://127.0.0.1:8000")
 

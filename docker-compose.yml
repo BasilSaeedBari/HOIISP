@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  hoiisp:
+    build: .
+    container_name: hoiisp_app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - hoiisp_data:/app/data
+    environment:
+      # Application Configuration
+      - SECRET_KEY=replace-me-with-a-secure-random-string
+      - HOIISP_BASE_URL=https://HOIISP.basilsaeedbari.com
+      
+      # GitHub Webhook Authentication
+      - GITHUB_WEBHOOK_SECRET=replace-me
+      
+      # Microsoft Teams Notification (Optional)
+      - TEAMS_WEBHOOK_URL=
+      
+      # Note: SMTP configuration and Mailing Lists are managed 
+      # entirely via the Admin Panel and stored securely in the DB.
+
+volumes:
+  hoiisp_data:

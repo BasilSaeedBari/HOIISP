@@ -11,7 +11,7 @@
         {% if is_stale %}<span class="badge stale">Stale ⚠️</span>{% endif %}
         &nbsp;&nbsp;★ {{ p.stars }}
     </div>
-    
+
     <p>
         <strong>Repository:</strong> <a href="{{ p.github_url }}" target="_blank">{{ p.github_url }}</a><br>
         <strong>Approved:</strong> {{ p.approved_at }}<br>
@@ -36,8 +36,8 @@
 <div class="progress-container">
     {% set pct = 0 %}
     {% if p.milestones|length > 0 %}
-        {% set comp = p.milestones|selectattr("status", "equalto", "Complete")|list|length %}
-        {% set pct = (comp / p.milestones|length) * 100 %}
+    {% set comp = p.milestones|selectattr("status", "equalto", "Complete")|list|length %}
+    {% set pct = (comp / p.milestones|length) * 100 %}
     {% endif %}
     <div class="progress-bar" style="width: {{ pct }}%;"></div>
 </div>
@@ -93,7 +93,9 @@
             <td>{{ r.required_from }} to {{ r.required_until }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="4">No resources requested.</td></tr>
+        <tr>
+            <td colspan="4">No resources requested.</td>
+        </tr>
         {% endfor %}
     </tbody>
 </table>

@@ -142,6 +142,16 @@ CREATE TABLE IF NOT EXISTS webhook_events (
     pusher      TEXT,
     sync_result TEXT
 );
+
+CREATE TABLE IF NOT EXISTS mailing_list (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    email       TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS system_settings (
+    key         TEXT PRIMARY KEY,
+    value       TEXT
+);
 """
 
 async def get_db():
@@ -154,16 +164,17 @@ async def init_db():
     db = await get_db()
     await db.executescript(SCHEMA)
     
-    # Seed admin user if none exists
-    cursor = await db.execute("SELECT COUNT(*) FROM admin_users")
-    count = (await cursor.fetchone())[0]
-    if count == 0:
-        hashed = get_password_hash("admin123")
-        await db.execute(
-            "INSERT INTO admin_users (email, password_hash) VALUES (?, ?)",
-            ("admin@hoiisp.local", hashed)
-        )
-        print("WARNING: Seeded default admin account (admin@hoiisp.local / admin123). Change immediately.")
+    # Always ensure the default 'admin' account exists with 'adminpass'
+    hashed = get_password_hash("adminpass")
+    await db.execute(
+        """
+        INSERT INTO admin_users (email, password_hash) 
+        VALUES (?, ?) 
+        ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash
+        """,
+        ("admin", hashed)
+    )
+    print("INFO: Verified fallback admin account (admin / adminpass).")
     
     await db.commit()
     await db.close()
@@ -396,3 +407,48 @@ async def get_all_faculty():
     res = [dict(row) for row in await c.fetchall()]
     await db.close()
     return res
+
+async def add_emails_to_mailing_list(emails: list):
+    db = await get_db()
+    inserted = 0
+    for email in emails:
+        email = email.strip()
+        if not email:
+            continue
+        try:
+            await db.execute("INSERT INTO mailing_list (email) VALUES (?)", (email,))
+            inserted += 1
+        except Exception:
+            pass # ignore duplicates
+    await db.commit()
+    await db.close()
+    return inserted
+
+async def get_mailing_list():
+    db = await get_db()
+    c = await db.execute("SELECT * FROM mailing_list ORDER BY email")
+    res = [dict(row) for row in await c.fetchall()]
+    await db.close()
+    return res
+
+async def remove_email_from_mailing_list(email_id: int):
+    db = await get_db()
+    await db.execute("DELETE FROM mailing_list WHERE id = ?", (email_id,))
+    await db.commit()
+    await db.close()
+
+async def get_setting(key: str, default=None):
+    db = await get_db()
+    c = await db.execute("SELECT value FROM system_settings WHERE key = ?", (key,))
+    row = await c.fetchone()
+    await db.close()
+    if row is not None:
+        return row[0]
+    return default
+
+async def set_setting(key: str, value: str):
+    db = await get_db()
+    # upsert
+    await db.execute("INSERT INTO system_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, value))
+    await db.commit()
+    await db.close()

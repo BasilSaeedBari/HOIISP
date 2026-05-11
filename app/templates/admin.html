@@ -84,4 +84,102 @@
 {% else %}
 <p>No active projects.</p>
 {% endif %}
+
+<hr>
+<h3>SMTP Configuration</h3>
+<form action="/api/admin/settings/smtp" method="post" style="margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
+    <div style="margin-bottom: 10px;">
+        <label for="host" style="display:inline-block; width: 100px;">Host:</label>
+        <input type="text" name="host" value="{{ smtp.host }}" required>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label for="port" style="display:inline-block; width: 100px;">Port:</label>
+        <input type="number" name="port" value="{{ smtp.port }}" required>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label for="user" style="display:inline-block; width: 100px;">User:</label>
+        <input type="text" name="user" value="{{ smtp.user }}" required>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label for="sender" style="display:inline-block; width: 100px;">Sender Email:</label>
+        <input type="email" name="sender" value="{{ smtp.sender }}" required>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label for="password" style="display:inline-block; width: 100px;">Password:</label>
+        <input type="password" name="password" placeholder="Enter new password to change...">
+        <small style="color: #666; margin-left: 10px;">Leave blank to keep current password.</small>
+    </div>
+    <button type="submit" style="background-color: #28a745; color: white;">Save Configuration</button>
+</form>
+
+<hr>
+<h3>Mailing List Management</h3>
+
+<form action="/api/admin/mailing_list/upload" method="post" enctype="multipart/form-data" style="margin-bottom: 15px;">
+    <label for="file">Upload comma-separated email list (.txt):</label>
+    <input type="file" name="file" accept=".txt" required>
+    <button type="submit">Upload</button>
+</form>
+
+<form action="/api/admin/mailing_list/add" method="post" style="margin-bottom: 15px;">
+    <label for="email">Add single email:</label>
+    <input type="email" name="email" placeholder="student@example.com" required>
+    <button type="submit">Add</button>
+</form>
+
+<form action="/api/admin/mailing_list/send" method="post" style="margin-bottom: 15px;">
+    <button type="submit" style="background-color: #0078D7; color: white;">Force Send Mail (Digest)</button>
+</form>
+
+{% if mailing_list %}
+<div style="overflow-x: auto; max-height: 300px; border: 1px solid #ddd; margin-bottom: 20px;">
+<table>
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in mailing_list %}
+        <tr>
+            <td>{{ m.email }}</td>
+            <td>
+                <form action="/api/admin/mailing_list/remove/{{ m.id }}" method="post" style="display:inline;">
+                    <button type="submit" style="padding:2px 8px; font-size:0.8em; background-color: #d9534f; color: white; border: none; cursor: pointer;">Remove</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p>No emails in the mailing list.</p>
+{% endif %}
+
+<hr>
+<h3>Live Debug Console</h3>
+<div id="debug-console" style="background: #1e1e1e; color: #00ff00; padding: 10px; height: 300px; overflow-y: scroll; font-family: monospace; font-size: 0.9em; border-radius: 5px; margin-bottom: 20px;">
+    <p style="margin: 0; color: #888;">// Initializing stream...</p>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const consoleDiv = document.getElementById("debug-console");
+        const evtSource = new EventSource("/api/admin/stream/logs");
+        
+        evtSource.onmessage = function(event) {
+            if (event.data.trim() !== "") {
+                const p = document.createElement("p");
+                p.style.margin = "0";
+                p.textContent = event.data;
+                consoleDiv.appendChild(p);
+                // Auto-scroll
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            }
+        };
+    });
+</script>
+
 {% endblock %}
